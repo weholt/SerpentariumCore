@@ -52,7 +52,6 @@ class Teacher:
         return f"The teacher screams '{sentence}'."
 
 
-ServiceContainer().clear()
 ServiceContainer().register(TheTalkingProtocol, Teacher())
 
 if person := ServiceContainer().resolve(TheTalkingProtocol):
@@ -77,7 +76,6 @@ class TestingIoOperations:
     def read_file(self, filename: str) -> str:
         return "This is just some testing data"
 
-ServiceContainer().clear()
 ServiceContainer().register(IoOperations, ActualIoOperations)
 ServiceContainer().register(IoOperations, TestingIoOperations, namespace="test")
 
@@ -94,8 +92,6 @@ if io := ServiceContainer().resolve(IoOperations, namespace="test"):
 You can also use a function to calculate the correct namespace to use, for instance checking some setting, like this:
 
 ```python
-
-ServiceContainer().clear()
 
 class FancyLoggingBase(Protocol):
     def log(self, msg: str, func: Callable[[str], str]) -> str: ...
@@ -188,7 +184,6 @@ class C:
         return self.a.go_a() + " " + self.b.go_b() + " " + "And C as well!"
 
 
-ServiceContainer().clear()
 ServiceContainer().register(IA, A)
 ServiceContainer().register(IB, B)
 ServiceContainer().register(IC, C)
