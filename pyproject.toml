@@ -1,0 +1,168 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "serpentariumcore"
+dynamic = ["version"]
+description = ''
+readme = "README.md"
+requires-python = ">=3.12"
+license = "GPL-3.0"
+keywords = []
+authors = [
+  { name = "Thomas Weholt", email = "thomas@weholt.org" },
+]
+classifiers = [  
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+]
+
+dependencies = [
+  
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest", 
+  "mypy", 
+  "hatch", 
+  "black", 
+  "isort", 
+  "coverage", 
+  "pytest-cov", 
+  "mkdocs-material", 
+  "types-beautifulsoup4", 
+  "types-jsonschema", 
+  "mkdocstrings-python",
+  "mkautodoc",
+  "tox",
+]
+
+[project.urls]
+Documentation = "https://github.com/weholt/serpentariumcore#readme"
+Issues = "https://github.com/weholt/serpentariumcore/issues"
+Source = "https://github.com/weholt/serpentariumcore"
+
+[tool.hatch.version]
+path = "src/serpentariumcore/__about__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "src/",
+]
+
+[tool.hatch.envs.default]
+dependencies = [
+  "coverage[toml]>=6.5",
+  "pytest",
+]
+[tool.hatch.envs.default.scripts]
+test = "pytest {args:tests}"
+test-cov = "coverage run -m pytest {args:tests}"
+cov-report = [
+  "- coverage combine",
+  "coverage report",
+]
+cov = [
+  "test-cov",
+  "cov-report",
+]
+
+[[tool.hatch.envs.all.matrix]]
+python = ["3.8", "3.9", "3.10", "3.11", "3.12"]
+
+[tool.hatch.envs.types]
+dependencies = [
+  "mypy>=1.0.0",
+]
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:src/serpentariumcore tests}"
+
+[tool.coverage.run]
+source_pkgs = ["serpentariumcore"]
+branch = true
+parallel = true
+omit = [
+  "src/serpentariumcore/__about__.py",
+  "src/serpentariumcore/__init__.py",
+  ".tox/",
+]
+
+[tool.coverage.paths]
+src = ["src/serpentariumcore", "*/serpentariumcore/src/serpentariumcore"]
+tests = ["tests", "*/serpentariumcore/tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
+
+[tool.black]
+line-length = 180
+target-version = ['py312']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+combine_as_imports = true
+include_trailing_comma = true
+line_length = 180
+multi_line_output = 3
+known_first_party = ["config"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-rPa -q -s --cov=src/serpentariumcore --cov-report html"
+#addopts = "-rPa -q -s"
+
+[tool.tox]
+legacy_tox_ini = """
+    [tox]
+    min_version = 4.14
+    env_list =
+        py312
+        type
+        lint
+
+    [testenv]
+    deps = 
+      pytest 
+      pytest-cov
+      coverage
+    commands = 
+      pytest {tty:--color=yes} -rPa -q -s --cov=src --cov-report html tests
+      coverage report
+
+    [testenv:type]
+    deps = mypy
+    commands = 
+      mypy --install-types
+      mypy src
+
+    [testenv:lint]
+    description = run linters
+    skip_install = true
+    deps =
+        black
+    commands = 
+      black .
+"""
+
+[tool.mypy]
+python_version = "3.12"
+mypy_path = "src"
+strict = true
+# Unreachable blocks have been an issue when compiling mypyc, let's try to avoid 'em in the first place.
+warn_unreachable = true
+implicit_reexport = true
+show_error_codes = true
+show_column_numbers = true
