@@ -13,7 +13,7 @@ keywords = []
 authors = [
   { name = "Thomas Weholt", email = "thomas@weholt.org" },
 ]
-classifiers = [  
+classifiers = [
     "Environment :: Web Environment",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
@@ -25,24 +25,25 @@ classifiers = [
 ]
 
 dependencies = [
-  
+
 ]
 
 [project.optional-dependencies]
 dev = [
-  "pytest", 
-  "mypy", 
-  "hatch", 
-  "black", 
-  "isort", 
-  "coverage", 
-  "pytest-cov", 
-  "mkdocs-material", 
-  "types-beautifulsoup4", 
-  "types-jsonschema", 
+  "pytest",
+  "mypy",
+  "hatch",
+  "black",
+  "isort",
+  "coverage",
+  "pytest-cov",
+  "mkdocs-material",
+  "types-beautifulsoup4",
+  "types-jsonschema",
   "mkdocstrings-python",
   "mkautodoc",
   "tox",
+  "pre-commit",
 ]
 
 [project.urls]
@@ -134,17 +135,17 @@ legacy_tox_ini = """
         lint
 
     [testenv]
-    deps = 
-      pytest 
+    deps =
+      pytest
       pytest-cov
       coverage
-    commands = 
+    commands =
       pytest {tty:--color=yes} -rPa -q -s --cov=src --cov-report html tests
       coverage report
 
     [testenv:type]
     deps = mypy
-    commands = 
+    commands =
       mypy --install-types
       mypy src
 
@@ -153,7 +154,7 @@ legacy_tox_ini = """
     skip_install = true
     deps =
         black
-    commands = 
+    commands =
       black .
 """
 
