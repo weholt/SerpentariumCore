@@ -33,7 +33,6 @@ Or
 > The Service Container pattern works by registering services with a central container, which can then be accessed by components as needed. This allows us to easily swap out services, add new services, or modify existing services without needing to modify individual components.
 
 ## Basic Usage
------------
 
 The following are actual test code, showing how to define a protocol and register an implemention
 of that protocol in the service container, and then later on, resolve the Protocol by name
