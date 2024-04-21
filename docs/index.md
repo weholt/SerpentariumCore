@@ -1,7 +1,9 @@
 # Serpentarium Core
 
-Serpentarium Core (Thanks ChatGPT for that name ;-)) is a basic service container for python using the typing Protocol
+Serpentarium Core is a basic service container for python using the typing Protocol
 to define interfaces and type hints to resolve construction requirements for services.
+
+- Thanks ChatGPT for that name ;-)
 
 Tested with:
 
@@ -25,15 +27,14 @@ Or
 
 ## What is it?
 
-> [Quote:](https://dev.to/abdelrahmanallam/simplifying-dependency-injection-with-the-service-container-pattern-in-reactjs-and-ruby-on-rails-525m) 
+[Quote:](https://dev.to/abdelrahmanallam/simplifying-dependency-injection-with-the-service-container-pattern-in-reactjs-and-ruby-on-rails-525m) 
 
 > ### What is the Service Container pattern?
-The Service Container pattern is a design pattern that provides a centralized location for managing application services. A service is a class or module that provides a specific functionality, such as authentication, database access, or email sending. By separating services from components, we can achieve greater separation of concerns and better maintainability of our codebase.
+> The Service Container pattern is a design pattern that provides a centralized location for managing application services. A service is a class or module that provides a specific functionality, such as authentication, database access, or email sending. By separating services from components, we can achieve greater separation of concerns and better maintainability of our codebase.
 
 > The Service Container pattern works by registering services with a central container, which can then be accessed by components as needed. This allows us to easily swap out services, add new services, or modify existing services without needing to modify individual components.
 
 ## Basic Usage
------------
 
 The following are actual test code, showing how to define a protocol and register an implemention
 of that protocol in the service container, and then later on, resolve the Protocol by name
@@ -53,7 +54,6 @@ class Teacher:
         return f"The teacher screams '{sentence}'."
 
 
-ServiceContainer().clear()
 ServiceContainer().register(TheTalkingProtocol, Teacher())
 
 if person := ServiceContainer().resolve(TheTalkingProtocol):
@@ -78,7 +78,6 @@ class TestingIoOperations:
     def read_file(self, filename: str) -> str:
         return "This is just some testing data"
 
-ServiceContainer().clear()
 ServiceContainer().register(IoOperations, ActualIoOperations)
 ServiceContainer().register(IoOperations, TestingIoOperations, namespace="test")
 
@@ -95,8 +94,6 @@ if io := ServiceContainer().resolve(IoOperations, namespace="test"):
 You can also use a function to calculate the correct namespace to use, for instance checking some setting, like this:
 
 ```python
-
-ServiceContainer().clear()
 
 class FancyLoggingBase(Protocol):
     def log(self, msg: str, func: Callable[[str], str]) -> str: ...
@@ -180,7 +177,7 @@ class B:
 
 
 class C:
-    # Requires services that implements both the IA and IB protocol
+    # Requires some services that implements both the IA and IB protocol
     def __init__(self, a: IA, b: IB):
         self.a: IA = a
         self.b: IB = b
@@ -189,10 +186,11 @@ class C:
         return self.a.go_a() + " " + self.b.go_b() + " " + "And C as well!"
 
 
-ServiceContainer().clear()
 ServiceContainer().register(IA, A)
 ServiceContainer().register(IB, B)
 ServiceContainer().register(IC, C)
 if c := ServiceContainer().resolve(IC):
     assert c.go_c() == "Go A! Go B! And C as well!"
 ```
+
+The service container is implemented as a Singleton, so you won't create a new instance each time you call ```ServiceContainer()```; you get the same instance each time, including all the service registrations.
