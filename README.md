@@ -1,7 +1,9 @@
 # Serpentarium Core
 
-Serpentarium Core (Thanks ChatGPT for that name ;-)) is a basic service container for python using the typing Protocol
+Serpentarium Core is a basic service container for python using the typing Protocol
 to define interfaces and type hints to resolve construction requirements for services.
+
+- Thanks ChatGPT for that name ;-)
 
 Tested with:
 
@@ -190,3 +192,6 @@ ServiceContainer().register(IC, C)
 if c := ServiceContainer().resolve(IC):
     assert c.go_c() == "Go A! Go B! And C as well!"
 ```
+
+The service container is implemented as a Singleton, so you won't create a new instance each time you call ```ServiceContainer()``` 
+- you get the same instance each time, including all the service registrations.
