@@ -3,7 +3,7 @@
 Serpentarium Core is a basic service container for python using the typing Protocol
 to define interfaces and type hints to resolve construction requirements for services.
 
-- Thanks ChatGPT for that name ;-)
+Thanks ChatGPT for that name ;-)
 
 Tested with:
 
