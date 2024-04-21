@@ -52,13 +52,12 @@ class Teacher:
         return f"The teacher screams '{sentence}'."
 
 
-def test_teacher():
-    ServiceContainer().clear()
-    ServiceContainer().register(TheTalkingProtocol, Teacher())
+ServiceContainer().clear()
+ServiceContainer().register(TheTalkingProtocol, Teacher())
 
-    if person := ServiceContainer().resolve(TheTalkingProtocol):
-        assert person.speak(sentence="The dog sits on a mat") == 
-            "The teacher screams 'The dog sits on a mat'."
+if person := ServiceContainer().resolve(TheTalkingProtocol):
+    assert person.speak(sentence="The dog sits on a mat") == 
+        "The teacher screams 'The dog sits on a mat'."
 ```
 
 The service container also supports registering different implementations of the same protocol using namespaces:
