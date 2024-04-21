@@ -193,5 +193,4 @@ if c := ServiceContainer().resolve(IC):
     assert c.go_c() == "Go A! Go B! And C as well!"
 ```
 
-The service container is implemented as a Singleton, so you won't create a new instance each time you call ```ServiceContainer()``` 
-- you get the same instance each time, including all the service registrations.
+The service container is implemented as a Singleton, so you won't create a new instance each time you call ```ServiceContainer()```; you get the same instance each time, including all the service registrations.
