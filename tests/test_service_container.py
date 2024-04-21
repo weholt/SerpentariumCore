@@ -1,6 +1,7 @@
+import pytest
 from typing import Callable, Protocol, Tuple
 
-from serpentariumcore.service_container import ServiceContainer, ServiceRegistrator, WrapperService
+from serpentariumcore import ServiceContainer, ServiceRegistrator, WrapperService, ServiceAlreadyRegistered
 
 
 class TheTalkingProtocol(Protocol):
@@ -15,6 +16,11 @@ class Speaker:
 class Teacher:
     def speak(self, sentence) -> str:
         return f"The teacher screams '{sentence}'."
+
+
+class Substitute:
+    def speak(self, sentence) -> str:
+        return f"The substitute mumbles '{sentence}'."
 
 
 def test_teacher():
@@ -232,4 +238,63 @@ def test_wrapper():
             return f"{msg} + {self.args} + {self.kwargs}"
 
     if logger := ServiceContainer().resolve(FancyLoggingBase):
-        print(logger.log("Hello Ma!"))
+        assert logger.log("Hello Ma!") == "Hello Ma! + ((1, 2, 3), {'saying': 'Poof goes the dragon!'}, 'foo', 'bar') + {'name': 'Thomas'}"
+
+
+def test_duplicate_registration():
+    ServiceContainer().register(TheTalkingProtocol, Teacher())
+    with pytest.raises(ServiceAlreadyRegistered):
+        ServiceContainer().register(TheTalkingProtocol, Teacher())
+
+
+def test_replace_registration():
+    ServiceContainer().clear()
+    ServiceContainer().register(TheTalkingProtocol, Teacher())
+    ServiceContainer().replace(TheTalkingProtocol, Substitute())
+    if srv := ServiceContainer().resolve(TheTalkingProtocol):
+        assert srv.speak("Dog") == "The substitute mumbles 'Dog'."
+
+
+def test_remove_registration():
+    ServiceContainer().clear()
+    ServiceContainer().register(TheTalkingProtocol, Teacher())
+    ServiceContainer().remove(TheTalkingProtocol)
+    assert ServiceContainer().resolve(TheTalkingProtocol) == None
+
+
+def test_namespace_resolver_namespace_property():
+    def resolver():
+        return "test"
+
+    ServiceContainer().clear()
+    ServiceContainer().register(TheTalkingProtocol, Teacher(), namespace="test")
+    ServiceContainer().set_namespace_resolver(resolver)
+    assert isinstance(ServiceContainer().resolve(TheTalkingProtocol), Teacher)
+    assert ServiceContainer().namespace == "test"
+
+
+def test_clear_namespace_resolver():
+    def resolver():
+        return "test"
+
+    ServiceContainer().clear()
+    ServiceContainer().register(TheTalkingProtocol, Teacher(), namespace="test")
+    ServiceContainer().set_namespace_resolver(resolver)
+    assert isinstance(ServiceContainer().resolve(TheTalkingProtocol), Teacher)
+    assert ServiceContainer().namespace == "test"
+    ServiceContainer().clear_namespace_resolver()
+    assert ServiceContainer().namespace == "default"
+
+
+def test_remove_registration_with_instance():
+    ServiceContainer().clear()
+
+    class A:
+        pass
+
+    class B(A):
+        pass
+
+    ServiceContainer().register(A, B())
+    ServiceContainer().remove(A())
+    assert ServiceContainer().resolve(A) == None

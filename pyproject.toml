@@ -86,15 +86,17 @@ dependencies = [
 check = "mypy --install-types --non-interactive {args:src/serpentariumcore tests}"
 
 [tool.coverage.run]
-source_pkgs = ["serpentariumcore", "tests"]
+source_pkgs = ["serpentariumcore"]
 branch = true
 parallel = true
 omit = [
   "src/serpentariumcore/__about__.py",
+  "src/serpentariumcore/__init__.py",
+  ".tox/",
 ]
 
 [tool.coverage.paths]
-blockmanager = ["src/serpentariumcore", "*/serpentariumcore/src/serpentariumcore"]
+src = ["src/serpentariumcore", "*/serpentariumcore/src/serpentariumcore"]
 tests = ["tests", "*/serpentariumcore/tests"]
 
 [tool.coverage.report]
@@ -119,8 +121,8 @@ known_first_party = ["config"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-#addopts = "-rPa -q -s --cov=src --cov-report html"
-addopts = "-rPa -q -s"
+addopts = "-rPa -q -s --cov=src/serpentariumcore --cov-report html"
+#addopts = "-rPa -q -s"
 
 [tool.tox]
 legacy_tox_ini = """

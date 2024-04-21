@@ -1,71 +1,68 @@
-import sys
-from typing import get_args
-import inspect
-import uuid
-from dataclasses import dataclass, field
-from typing import ClassVar, Any, List, TypeVar, Protocol
+from typing import Protocol
+import pytest
 
+from serpentariumcore import ServiceContainer, MissingRequirements
 
-def print_classes(parent_class: Any) -> dict[Any, Any]:
-    result = {}
-    for _, obj in inspect.getmembers(sys.modules[__name__]):
-        if inspect.isclass(obj) and issubclass(obj, parent_class):
-            if hasattr(obj, "target"):
-                if target := obj.target():
-                    result[target] = obj
-
-    import pprint
-
-    pprint.pprint(result)
-    return result
 
 class IA(Protocol):
 
-    def go_a(self):
-        print("Go IA!")
+    def go_a(self): ...
+
 
 class IB(Protocol):
 
-    def go_b(self):
-        print("Go IB!")
+    def go_b(self): ...
+
+
+class IC(Protocol):
+
+    def go_c(self): ...
+
 
 class A:
+    # Requires no other service
     def __init__(self):
         pass
 
     def go_a(self):
-        print("Go A!")
+        return "Go A!"
+
 
 class B:
-    def __init__(self):
-        pass
+    # Requires some service that implements the IA protocol
+    def __init__(self, a: IA):
+        self.a = a
 
     def go_b(self):
-        print("Go B!")
+        return "Go B!"
 
 
 class C:
+    # Requires some services that implements both the IA and IB protocol
     def __init__(self, a: IA, b: IB):
         self.a: IA = a
         self.b: IB = b
 
-    def go(self):
-        self.a.go_a()
-        self.b.go_b()
+    def go_c(self):
+        return self.a.go_a() + " " + self.b.go_b() + " " + "And C as well!"
 
 
-def test_type_args():
-    reg = {IA: A(), IB: B()}
-
-    d =inspect.getfullargspec(C.__init__)
-    print(dir(d))
-    reqs = {k:v for k,v in d.annotations.items()}
-    params = {}
-    for k,v in reqs.items():
-        if v in reg:
-            params[k] = reg[v]
-    c = C(**params)
-    c.go()
+def test_dynamic_object_construction():
+    ServiceContainer().clear()
+    ServiceContainer().register(IA, A)
+    ServiceContainer().register(IB, B)
+    ServiceContainer().register(IC, C)
+    if c := ServiceContainer().resolve(IC):
+        assert c.go_c() is not None
 
 
-
+def test_dynamic_object_construction_missing_requirement():
+    ServiceContainer().clear()
+    ServiceContainer().register(IA, A)
+    # Not registering the IB service, which service C requires
+    with pytest.raises(MissingRequirements):
+        ServiceContainer().register(IC, C)
+    try:
+        ServiceContainer().register(IC, C)
+    except MissingRequirements as ex:
+        print(ex)
