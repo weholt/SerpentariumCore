@@ -200,3 +200,9 @@ if c := ServiceContainer().resolve(IC):
 ```
 
 The service container is implemented as a Singleton, so you won't create a new instance each time you call ```ServiceContainer()```; you get the same instance each time, including all the service registrations.
+
+## Contributing & Reporting Issues
+
+- Want to contribute directly to the source? Send me a line on thomas@weholt.org
+- Any contribution is higly welcome, be it constructive critisism, ideas, testing and reporting bugs or anything else :-)
+- [Issues are reported here ](https://github.com/weholt/SerpentariumCore/issues)
