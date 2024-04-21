@@ -5,9 +5,20 @@ to define interfaces and type hints to resolve construction requirements for ser
 
 Thanks ChatGPT for that name ;-)
 
-Tested with:
+## What is it?
+
+[Quote:](https://dev.to/abdelrahmanallam/simplifying-dependency-injection-with-the-service-container-pattern-in-reactjs-and-ruby-on-rails-525m) 
+
+> ### What is the Service Container pattern?
+> The Service Container pattern is a design pattern that provides a centralized location for managing application services. A service is a class or module that provides a specific functionality, such as authentication, database access, or email sending. By separating services from components, we can achieve greater separation of concerns and better maintainability of our codebase.
+
+> The Service Container pattern works by registering services with a central container, which can then be accessed by components as needed. This allows us to easily swap out services, add new services, or modify existing services without needing to modify individual components.
+
+## Tested with:
 
 * Python version 3.12.2
+
+## Installation
 
 Clone main repository:
 
@@ -24,15 +35,6 @@ Or
 
     $ pip install git+https://github.com/weholt/serpentariumcore.git
 ```
-
-## What is it?
-
-[Quote:](https://dev.to/abdelrahmanallam/simplifying-dependency-injection-with-the-service-container-pattern-in-reactjs-and-ruby-on-rails-525m) 
-
-> ### What is the Service Container pattern?
-> The Service Container pattern is a design pattern that provides a centralized location for managing application services. A service is a class or module that provides a specific functionality, such as authentication, database access, or email sending. By separating services from components, we can achieve greater separation of concerns and better maintainability of our codebase.
-
-> The Service Container pattern works by registering services with a central container, which can then be accessed by components as needed. This allows us to easily swap out services, add new services, or modify existing services without needing to modify individual components.
 
 ## Basic Usage
 
