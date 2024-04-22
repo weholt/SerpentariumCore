@@ -170,7 +170,7 @@ legacy_tox_ini = """
 
     commands =
       coverage html .tox/py312/Lib/site-packages/serpentariumcore/service_container.py
-      mkdocs build --clean
+      mkdocs build
 """
 
 [tool.mypy]
