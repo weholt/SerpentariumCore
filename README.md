@@ -34,6 +34,10 @@ independant developers like me (like $10) and not much more for companies (perha
 
 * Python version 3.12.2
 
+## Help
+
+* [Read the documentation here](https://weholt.github.io/SerpentariumCore/)
+
 ## Installation
 
 Clone main repository:
