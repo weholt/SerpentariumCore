@@ -1,11 +1,13 @@
-import pytest
 from typing import Callable, Protocol, Tuple
 
-from serpentariumcore import ServiceContainer, ServiceRegistrator, WrapperService, ServiceAlreadyRegistered
+import pytest
+
+from serpentariumcore import ServiceAlreadyRegistered, ServiceArgument, ServiceContainer, ServiceRegistrator
 
 
 class TheTalkingProtocol(Protocol):
-    def speak(self, sentence) -> str: ...
+    def speak(self, sentence) -> str:
+        ...
 
 
 class Speaker:
@@ -21,6 +23,10 @@ class Teacher:
 class Substitute:
     def speak(self, sentence) -> str:
         return f"The substitute mumbles '{sentence}'."
+
+
+class DummyWrapping(ServiceArgument):
+    pass
 
 
 def test_teacher():
@@ -66,10 +72,9 @@ def test_resolving_namespaces():
 def test_registrator_with_kwargs():
     ServiceContainer().clear()
 
-    @ServiceRegistrator(TheTalkingProtocol, **{"joke": "A barber, a developer and a mechanic walks into a bar"})
+    @ServiceRegistrator(TheTalkingProtocol).with_arguments(ServiceArgument(**{"joke": "A barber, a developer and a mechanic walks into a bar"}))
     class Comedian:
-
-        def __init__(self, **kwargs):
+        def __init__(self, *args, **kwargs):
             self.joke = kwargs.get("joke", "Two donkeys walk into a bar")
 
         def speak(self, sentence) -> str:
@@ -82,10 +87,11 @@ def test_registrator_with_kwargs():
 
 
 def test_registrator_with_kwargs_and_namespace():
-    @ServiceRegistrator(TheTalkingProtocol, namespace="jokes", **{"joke": "A barber, a developer and a mechanic walks into a bar"})
-    class Comedian:
+    ServiceContainer().clear()
 
-        def __init__(self, **kwargs):
+    @ServiceRegistrator(TheTalkingProtocol, namespace="jokes").with_arguments(ServiceArgument(**{"joke": "A barber, a developer and a mechanic walks into a bar"}))
+    class Comedian:
+        def __init__(self, *args, **kwargs):
             self.joke = kwargs.get("joke", "Two donkeys walk into a bar")
 
         def speak(self, sentence) -> str:
@@ -98,11 +104,11 @@ def test_registrator_with_kwargs_and_namespace():
 
 
 def test_registrator_with_same_instance_different_namespace():
-
     ServiceContainer().clear()
 
     class LoggingBase(Protocol):
-        def log(self, msg: str) -> None: ...
+        def log(self, msg: str) -> None:
+            ...
 
     @ServiceRegistrator(LoggingBase)
     class LoggingCritical:
@@ -114,23 +120,21 @@ def test_registrator_with_same_instance_different_namespace():
         def log(self, msg: str) -> Tuple[str, str]:
             return ("DEBUG", msg)
 
-    with ServiceContainer() as s:
-        if logger := s.resolve(LoggingBase):
-            level, _ = logger.log(msg="A critical message")
-            assert level == "CRITICAL"
+    if logger := ServiceContainer().resolve(LoggingBase):
+        level, _ = logger.log(msg="A critical message")
+        assert level == "CRITICAL"
 
-    with ServiceContainer("debug") as s:
-        if logger := s.resolve(LoggingBase):
-            level, _ = logger.log(msg="A critical message")
-            assert level == "DEBUG"
+    if logger := ServiceContainer().resolve(LoggingBase, "debug"):
+        level, _ = logger.log(msg="A critical message")
+        assert level == "DEBUG"
 
 
 def test_registrator_with_same_instance_custom_func():
-
     ServiceContainer().clear()
 
     class FancyLoggingBase(Protocol):
-        def log(self, msg: str, func: Callable[[str], str]) -> str: ...
+        def log(self, msg: str, func: Callable[[str], str]) -> str:
+            ...
 
     class LoggingTakingFunc:
         def __init__(self, func: Callable[[str], str]) -> None:
@@ -171,11 +175,11 @@ def test_registrator_with_same_instance_custom_func():
 
 
 def test_namespace_resolver():
-
     ServiceContainer().clear()
 
     class FancyLoggingBase(Protocol):
-        def log(self, msg: str, func: Callable[[str], str]) -> str: ...
+        def log(self, msg: str, func: Callable[[str], str]) -> str:
+            ...
 
     class LoggingTakingFunc:
         def __init__(self, func: Callable[[str], str]) -> None:
@@ -212,33 +216,27 @@ def test_namespace_resolver():
 
 
 def test_wrapper():
-
     ServiceContainer().clear()
 
     class FancyLoggingBase(Protocol):
-        def log(self, msg: str, func: Callable[[str], str]) -> str: ...
+        def log(self, msg: str, func: Callable[[str], str]) -> str:
+            ...
 
-    class PresentWrapping(WrapperService):
-
+    class ExtraArguments(ServiceArgument):
         def unwrap(self):
             self.kwargs.update({"name": "Thomas"})
-            self.args += (
-                "foo",
-                "bar",
-            )
             return super().unwrap()
 
-    @ServiceRegistrator(FancyLoggingBase, None, *(1, 2, 3), **{"saying": "Poof goes the dragon!"}).wrap(PresentWrapping)
+    @ServiceRegistrator(FancyLoggingBase).with_arguments(ExtraArguments(**{"saying": "Poof goes the dragon!"}))
     class Logging:
-        def __init__(self, *args, **kwargs) -> None:
-            self.args = args
+        def __init__(self, **kwargs) -> None:
             self.kwargs = kwargs
 
         def log(self, msg: str) -> str:
-            return f"{msg} + {self.args} + {self.kwargs}"
+            return f"{msg} + {self.kwargs}"
 
     if logger := ServiceContainer().resolve(FancyLoggingBase):
-        assert logger.log("Hello Ma!") == "Hello Ma! + ((1, 2, 3), {'saying': 'Poof goes the dragon!'}, 'foo', 'bar') + {'name': 'Thomas'}"
+        assert logger.log("Hello Ma!") == "Hello Ma! + {'saying': 'Poof goes the dragon!', 'name': 'Thomas'}"
 
 
 def test_duplicate_registration():
@@ -298,3 +296,54 @@ def test_remove_registration_with_instance():
     ServiceContainer().register(A, B())
     ServiceContainer().remove(A())
     assert ServiceContainer().resolve(A) == None
+
+
+def test_wrapper_service_base():
+    ServiceContainer().clear()
+
+    class IA(Protocol):
+        def speak(self):
+            ...
+
+    class A:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+        def speak(self):
+            return f"Here are kwargs: {self.kwargs}"
+
+    ServiceContainer().register(IA, ServiceArgument(some="foobar", variable="something").for_service(A))
+    if res := ServiceContainer().resolve(IA):
+        assert res.speak() != None
+
+
+def test_wrapper_service_base_with_dependencies():
+    ServiceContainer().clear()
+
+    class IB(Protocol):
+        def howl(self):
+            ...
+
+    class B:
+        def howl(self) -> str:
+            return "YAHOOO!"
+
+    class IA(Protocol):
+        def speak(self) -> str:
+            ...
+
+    class A:
+        def __init__(self, b: IB, **kwargs):
+            self.b = b
+            self.kwargs = kwargs
+
+        def speak(self) -> str:
+            return f"Here are kwargs: {self.kwargs} and a word from B: {self.b.howl()}"
+
+    ServiceContainer().register(IB, B)
+    ServiceContainer().register(IA, ServiceArgument(some="foobar", variable="something").for_service(A))
+    if res := ServiceContainer().resolve(IA):
+        spoken: str = res.speak()
+        # Here we test to see if both the foobar supplied as extra argument
+        # and the data from the required service IB are in the response
+        assert "foobar" in spoken and "YAHOO" in spoken

@@ -12,11 +12,23 @@ Thanks ChatGPT for that name ;-)
 
 > The Service Container pattern works by registering services with a central container, which can then be accessed by components as needed. This allows us to easily swap out services, add new services, or modify existing services without needing to modify individual components.
 
-> [Source](https://dev.to/abdelrahmanallam/simplifying-dependency-injection-with-the-service-container-pattern-in-reactjs-and-ruby-on-rails-525m) 
+> [Source](https://dev.to/abdelrahmanallam/simplifying-dependency-injection-with-the-service-container-pattern-in-reactjs-and-ruby-on-rails-525m)
 
 ## Status:
 
-* In development / Alpha / Proof-of-consept
+* Version: 0.2.0
+* Status: In development / Alpha / Proof-of-consept
+
+## License:
+
+* [GPL-3 - GNU GENERAL PUBLIC LICENSE Version 3.](https://www.gnu.org/licenses/gpl-3.0.txt)
+* A low-cost commercial license will be available later.
+
+**Why dual licensing you might ask?** Because the [current open-source licensing does not work](https://www.youtube.com/watch?v=9YQgNDLFYq8). It
+only benefits the big commercial companies and leave the independant, personal developer with nothing.
+
+This project will be available for commercial-non-GPL-use for a small fee, even smaller for
+independant developers like me (like $10) and not much more for companies (perhaps $100).
 
 ## Tested with:
 
@@ -63,9 +75,11 @@ class Teacher:
 ServiceContainer().register(TheTalkingProtocol, Teacher())
 
 if person := ServiceContainer().resolve(TheTalkingProtocol):
-    assert person.speak(sentence="The dog sits on a mat") == 
+    assert person.speak(sentence="The dog sits on a mat") ==
         "The teacher screams 'The dog sits on a mat'."
 ```
+
+### Namespaces
 
 The service container also supports registering different implementations of the same protocol using namespaces:
 
@@ -88,11 +102,11 @@ ServiceContainer().register(IoOperations, ActualIoOperations)
 ServiceContainer().register(IoOperations, TestingIoOperations, namespace="test")
 
 if io := ServiceContainer().resolve(IoOperations):
-    assert io.read_file("some_file.txt") == 
+    assert io.read_file("some_file.txt") ==
         "Data from the actual file on disk called some_file.txt"
 
 if io := ServiceContainer().resolve(IoOperations, namespace="test"):
-    assert io.read_file("some_file.txt") == 
+    assert io.read_file("some_file.txt") ==
         "This is just some testing data"
 
 ```
@@ -142,10 +156,12 @@ if clueless_logger := ServiceContainer().resolve(FancyLoggingBase):
 
 ```
 
-In the example above you can see that we do no change to the actual code using the service, 
+In the example above you can see that we do no change to the actual code using the service,
 but what implementation is used is calculated based on the settings.
 
-We can also register services that depend on the implementation of other registered services, 
+### Automatic dependency resolving and construction of services
+
+We can also register services that depend on the implementation of other registered services,
 and the actual construction of instances of those services will be handled by the service container:
 
 ```python
@@ -201,8 +217,66 @@ if c := ServiceContainer().resolve(IC):
 
 The service container is implemented as a Singleton, so you won't create a new instance each time you call ```ServiceContainer()```; you get the same instance each time, including all the service registrations.
 
+### Supply your service with additional arguments
+
+Sometimes you need to provide some additional run-time arguments for your service, but you still want it to
+be constructed lazily. Using the ServiceArgument class can achieve this, like so:
+
+```python
+
+from serpentariumcore import ServiceContainer, ServiceArgument
+
+
+class IB(Protocol):
+
+    def howl(self) -> str: ...
+
+
+class B:
+
+    def howl(self) -> str:
+        return "YAHOOO!"
+
+
+class IA(Protocol):
+
+    def speak(self) -> str: ...
+
+
+class A:
+    def __init__(self, b: IB, **kwargs):
+        self.b = b
+        self.kwargs = kwargs
+
+    def speak(self) -> str:
+        return f"Kwargs: {self.kwargs} and {self.b.howl()}"
+
+ServiceContainer().register(IB, B)
+ServiceContainer().register(IA,
+    ServiceArgument(some="foobar", variable="something").for_service(A))
+
+if res := ServiceContainer().resolve(IA):
+    spoken: str = res.speak()
+
+    # Here we test to see if both the foobar supplied as extra argument
+    # and the data from the required service IB are in the response
+    assert "foobar" in spoken and "YAHOO" in spoken
+```
+
 ## Contributing & Reporting Issues
 
 - Want to contribute directly to the source? Send me a line on thomas@weholt.org
 - Any contribution is higly welcome, be it constructive critisism, ideas, testing and reporting bugs or anything else :-)
 - [Issues are reported here ](https://github.com/weholt/SerpentariumCore/issues)
+
+## Release notes
+
+### Version 0.2.0
+
+- Fixed a few bugs discovered while adding more unittest.
+- Added support for lazy construction of instances.
+- Added a ServiceArgument class for supplying your service with run-time arguments
+
+### Version 0.1.0
+
+- First initial release.
