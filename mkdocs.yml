@@ -1,4 +1,9 @@
 site_name: SerpentariumCore
+site_url: https://weholt.github.io/serpentariumcore/
+repo_url: https://github.com/weholt/serpentariumcore/
+docs_dir: src
+site_dir: docs
+
 theme:
   name: material
   features:
@@ -6,7 +11,7 @@ theme:
 
 plugins:
 - search
-- mkdocstrings  
+- mkdocstrings
 
 extra_css:
   - style.css
