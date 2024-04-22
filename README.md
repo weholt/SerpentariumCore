@@ -16,7 +16,7 @@ Thanks ChatGPT for that name ;-)
 
 ## Status:
 
-* Version: 0.2.0
+* Version: 0.2.1
 * Status: In development / Alpha / Proof-of-consept
 
 ## License:
@@ -278,6 +278,10 @@ if res := ServiceContainer().resolve(IA):
 - [Issues are reported here ](https://github.com/weholt/SerpentariumCore/issues)
 
 ## Release notes
+
+### Version 0.2.1
+
+- Added github pages for documentation. More docs coming soon :-)
 
 ### Version 0.2.0
 
