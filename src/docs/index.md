@@ -34,6 +34,14 @@ independant developers like me (like $10) and not much more for companies (perha
 
 * Python version 3.12.2
 
+## Planned features and todo`s
+
+* Threads and async support? No clue on how thread-safe this is right now. Any help appreciated.
+
+## Help
+
+* [Read the documentation here](https://weholt.github.io/SerpentariumCore/)
+
 ## Installation
 
 Clone main repository:

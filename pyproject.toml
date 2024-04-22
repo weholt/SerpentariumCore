@@ -37,11 +37,12 @@ dev = [
   "isort",
   "coverage",
   "pytest-cov",
-  "mkdocs-material",
   "types-beautifulsoup4",
   "types-jsonschema",
+  "mkdocs-material",
   "mkdocstrings-python",
   "mkautodoc",
+  "mkdocs-coverage",
   "tox",
   "pre-commit",
 ]
@@ -133,6 +134,7 @@ legacy_tox_ini = """
         py312
         type
         lint
+        docs-deploy
 
     [testenv]
     deps =
@@ -156,6 +158,19 @@ legacy_tox_ini = """
         black
     commands =
       black .
+
+    [testenv:docs-deploy]
+    description = built fresh docs and deploy them
+    deps =
+      mkdocs-material
+      mkdocstrings-python
+      mkautodoc
+      mkdocs-coverage
+      coverage
+
+    commands =
+      coverage html .tox/py312/Lib/site-packages/serpentariumcore/service_container.py
+      mkdocs build --clean
 """
 
 [tool.mypy]

@@ -28,7 +28,7 @@ class MissingRequirements(Exception):
         self.missing_requirements = missing_requirements
 
     def __str__(self) -> str:
-        return f"Service {self.klass} requires the following services which are not avaible: {", ".join(self.missing_requirements)}"  # type: ignore # noqa: F401
+        return f"Service {self.klass} requires the following services which are not avaible: {", ".join(self.missing_requirements)}"  # type: ignore # noqa: F401 # pragma: no cover
 
 
 class ServiceArgument:
@@ -53,7 +53,7 @@ class ServiceContainer:
     __previous_namespace: str | None = None
     __namespace_resolver: Callable[[], str] | None = None
 
-    def __new__(cls, namespace: str | None = None, lazy_construction: bool | None = None):  # type: ignore # noqa: F401
+    def __new__(cls, namespace: str | None = None, lazy_construction: bool | None = None):  # type: ignore # noqa: F401 # pragma: no cover
         if cls.__instance is None:
             cls.__instance = super(ServiceContainer, cls).__new__(cls)
         return cls.__instance
@@ -75,7 +75,7 @@ class ServiceContainer:
         return ns
 
     def construct[T](self, klass: T, namespace: str | None = None, **kwargs) -> T:
-        if not inspect.isclass(klass):  # type: ignore # noqa: F401
+        if not inspect.isclass(klass):  # type: ignore # noqa: F401 # pragma: no cover
             return klass
 
         ns = self.__check_namespace(namespace)
@@ -88,7 +88,7 @@ class ServiceContainer:
         for k, v in reqs.items():
             if v in self.__services[ns]:
                 inst = self.__services[ns][v]
-                if inspect.isclass(inst):  # type: ignore # noqa: F401
+                if inspect.isclass(inst):  # type: ignore # noqa: F401 # pragma: no cover
                     inst = self.construct(inst, ns)
                 params[k] = inst
             elif v:
@@ -115,7 +115,7 @@ class ServiceContainer:
 
     def resolve[T](self, klass: Type[T], namespace: str | None = None) -> T | None:
         ns = self.__check_namespace(namespace)
-        if klass in self.__services[ns]:  # pragma: no cover
+        if klass in self.__services[ns]:  # type: ignore # noqa: F401 # pragma: no cover
             item = self.__services[ns][klass]
             args = ()
             kwargs = {}
@@ -149,7 +149,7 @@ class ServiceContainer:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):  # type: ignore
-        if self.__previous_namespace:  # type: ignore # noqa: F401
+        if self.__previous_namespace:  # type: ignore # noqa: F401 # pragma: no cover
             self.__current_namespace = self.__previous_namespace
         self.__previous_namespace = None
 
