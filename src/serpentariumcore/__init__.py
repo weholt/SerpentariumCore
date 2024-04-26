@@ -9,5 +9,7 @@ from .service_container import (
     ServiceArgument,
     ServiceContainer,
     ServiceNotRegistered,
-    ServiceRegistrator,
+    ServiceRegistration,
+    register_as,
+    resolve,
 )

@@ -1,6 +1,6 @@
 import inspect
 import logging
-from typing import Any, Callable, Self, Tuple, Type
+from typing import Any, Callable, Protocol, Self, Tuple, Type
 
 logger = logging.getLogger("serpentariumcore")
 
@@ -176,7 +176,7 @@ class ServiceContainer:
         return True
 
 
-class ServiceRegistrator:
+class ServiceRegistration:
     def __init__(self, klass, namespace: str | None = None):
         self.klass = klass
         self.namespace = namespace
@@ -196,3 +196,18 @@ class ServiceRegistrator:
             ServiceContainer().register(self.klass, instance, namespace=self.namespace)
             logger.info(f"Service container registered {self.klass} -> {instance}")
         return instance
+
+
+def resolve[T](klass: Type[T], namespace: str | None = None) -> T | None:
+    "Shortcut for ServiceContainer().resolve(...)"
+    return ServiceContainer().resolve(klass, namespace)
+
+
+def register_as(klass: Type, namespace: str | None = None) -> Callable[[Type], Type]:
+    "Shortcut for ServiceRegistration(...)"
+
+    def decorator(cls: Type) -> Type:
+        ServiceContainer().register(klass, cls, namespace=namespace)
+        return cls
+
+    return decorator

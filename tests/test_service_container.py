@@ -2,7 +2,7 @@ from typing import Callable, Protocol, Tuple
 
 import pytest
 
-from serpentariumcore import ServiceAlreadyRegistered, ServiceArgument, ServiceContainer, ServiceRegistrator
+from serpentariumcore import ServiceAlreadyRegistered, ServiceArgument, ServiceContainer, ServiceRegistration, register_as, resolve
 
 
 class TheTalkingProtocol(Protocol):
@@ -27,6 +27,26 @@ class Substitute:
 
 class DummyWrapping(ServiceArgument):
     pass
+
+
+def test_teacher_using_both_shortcuts():
+    ServiceContainer().clear()
+
+    @register_as(TheTalkingProtocol)
+    class HeadMaster:
+        def speak(self, sentence) -> str:
+            return f"The headmaster whispers '{sentence}'."
+
+    if person := resolve(TheTalkingProtocol):
+        assert person.speak(sentence="The dog sits on a mat") == "The headmaster whispers 'The dog sits on a mat'."
+
+
+def test_teacher_using_shortcut():
+    ServiceContainer().clear()
+    ServiceContainer().register(TheTalkingProtocol, Teacher())
+
+    if person := resolve(TheTalkingProtocol):
+        assert person.speak(sentence="The dog sits on a mat") == "The teacher screams 'The dog sits on a mat'."
 
 
 def test_teacher():
@@ -69,10 +89,10 @@ def test_resolving_namespaces():
             assert person.speak(sentence="The dog sits on a mat") == "The speaker says 'The dog sits on a mat'."
 
 
-def test_registrator_with_kwargs():
+def test_registration_with_kwargs():
     ServiceContainer().clear()
 
-    @ServiceRegistrator(TheTalkingProtocol).with_arguments(ServiceArgument(**{"joke": "A barber, a developer and a mechanic walks into a bar"}))
+    @ServiceRegistration(TheTalkingProtocol).with_arguments(ServiceArgument(**{"joke": "A barber, a developer and a mechanic walks into a bar"}))
     class Comedian:
         def __init__(self, *args, **kwargs):
             self.joke = kwargs.get("joke", "Two donkeys walk into a bar")
@@ -86,10 +106,10 @@ def test_registrator_with_kwargs():
         )
 
 
-def test_registrator_with_kwargs_and_namespace():
+def test_registration_with_kwargs_and_namespace():
     ServiceContainer().clear()
 
-    @ServiceRegistrator(TheTalkingProtocol, namespace="jokes").with_arguments(ServiceArgument(**{"joke": "A barber, a developer and a mechanic walks into a bar"}))
+    @ServiceRegistration(TheTalkingProtocol, namespace="jokes").with_arguments(ServiceArgument(**{"joke": "A barber, a developer and a mechanic walks into a bar"}))
     class Comedian:
         def __init__(self, *args, **kwargs):
             self.joke = kwargs.get("joke", "Two donkeys walk into a bar")
@@ -103,19 +123,19 @@ def test_registrator_with_kwargs_and_namespace():
         )
 
 
-def test_registrator_with_same_instance_different_namespace():
+def test_registration_with_same_instance_different_namespace():
     ServiceContainer().clear()
 
     class LoggingBase(Protocol):
         def log(self, msg: str) -> None:
             ...
 
-    @ServiceRegistrator(LoggingBase)
+    @ServiceRegistration(LoggingBase)
     class LoggingCritical:
         def log(self, msg: str) -> Tuple[str, str]:
             return ("CRITICAL", msg)
 
-    @ServiceRegistrator(LoggingBase, namespace="debug")
+    @ServiceRegistration(LoggingBase, namespace="debug")
     class LoggingDebug:
         def log(self, msg: str) -> Tuple[str, str]:
             return ("DEBUG", msg)
@@ -129,7 +149,7 @@ def test_registrator_with_same_instance_different_namespace():
         assert level == "DEBUG"
 
 
-def test_registrator_with_same_instance_custom_func():
+def test_registration_with_same_instance_custom_func():
     ServiceContainer().clear()
 
     class FancyLoggingBase(Protocol):
@@ -227,7 +247,7 @@ def test_wrapper():
             self.kwargs.update({"name": "Thomas"})
             return super().unwrap()
 
-    @ServiceRegistrator(FancyLoggingBase).with_arguments(ExtraArguments(**{"saying": "Poof goes the dragon!"}))
+    @ServiceRegistration(FancyLoggingBase).with_arguments(ExtraArguments(**{"saying": "Poof goes the dragon!"}))
     class Logging:
         def __init__(self, **kwargs) -> None:
             self.kwargs = kwargs
