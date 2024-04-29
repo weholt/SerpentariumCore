@@ -1,8 +1,15 @@
 import inspect
 import logging
-from typing import Any, Callable, Protocol, Self, Tuple, Type
+from inspect import getmembers, isfunction
+from typing import Any, Callable, Iterable, Protocol, Self, Tuple, Type
 
 logger = logging.getLogger("serpentariumcore")
+
+
+def implements_protocol(cls, protocol):
+    cls_attrs = [name for name, _ in getmembers(cls, predicate=isfunction)]
+    protocol_attrs = [name for name, _ in getmembers(protocol, predicate=isfunction)]
+    return all(attr in cls_attrs for attr in protocol_attrs if not attr.startswith("__"))
 
 
 class ServiceAlreadyRegistered(Exception):
@@ -18,6 +25,10 @@ class InstanceIsNotSubclass(Exception):
 
 
 class ConstructionFailed(Exception):
+    pass
+
+
+class ServiceRequiresOtherServiceWithIdenticalProtocol(Exception):
     pass
 
 
@@ -49,6 +60,7 @@ class ServiceContainer:
     __lazy_construction: bool | None = None
     __instance = None
     __services: dict[str, dict[Type, Type]] = {}
+    __multi_services: dict[Type, list[Type]] = {}
     __current_namespace: str = __default_namespace
     __previous_namespace: str | None = None
     __namespace_resolver: Callable[[], str] | None = None
@@ -97,7 +109,6 @@ class ServiceContainer:
         if missing_requirements:
             raise MissingRequirements(klass.__name__, missing_requirements)
 
-        # breakpoint()
         return klass(**params)
 
     def register(self, klass: Type, instance: Type, namespace: str | None = None) -> None:
@@ -109,6 +120,19 @@ class ServiceContainer:
             raise ServiceAlreadyRegistered(f"Service {klass} is already registered.")
         self.__services[ns][klass] = instance
 
+    def multi_register(self, klass: Type, instance: Type) -> None:
+        assert implements_protocol(instance, klass)
+        self.__multi_services.setdefault(klass, []).append(instance)
+
+        klass_contstructor_args = inspect.getfullargspec(instance.__init__)
+        reqs = [proto for _, proto in klass_contstructor_args.annotations.items()]
+        if klass in reqs:
+            raise ServiceRequiresOtherServiceWithIdenticalProtocol(instance)
+
+    def resolve_multi(self, klass: Type) -> Iterable[Type]:
+        for service in self.__multi_services.get(klass, []):
+            yield self.construct(service)
+
     def replace(self, klass: Type, instance: Type, namespace: str | None = None) -> None:
         ns = self.__check_namespace(namespace)
         self.__services[ns][klass] = instance
@@ -117,7 +141,6 @@ class ServiceContainer:
         ns = self.__check_namespace(namespace)
         if klass in self.__services[ns]:  # type: ignore # noqa: F401 # pragma: no cover
             item = self.__services[ns][klass]
-            args = ()
             kwargs = {}
             if isinstance(item, ServiceArgument):
                 inner_klass, kwargs = item.unwrap()
@@ -125,7 +148,7 @@ class ServiceContainer:
             if self.lazy_construction and inspect.isclass(item):
                 item = self.construct(item, ns, **kwargs)
 
-            return item
+            return item  # type: ignore # noqa: F401 # pragma: no cover
         return None
 
     def remove(self, klass: Type, namespace: str | None = None) -> None:
@@ -211,3 +234,15 @@ def register_as(klass: Type, namespace: str | None = None) -> Callable[[Type], T
         return cls
 
     return decorator
+
+
+def multi_register_as(klass: Type) -> Callable[[Type], Type]:
+    def decorator(cls: Type) -> Type:
+        ServiceContainer().multi_register(klass, cls)
+        return cls
+
+    return decorator
+
+
+def resolve_multi[T](klass: Type[T]) -> Iterable[T]:
+    return ServiceContainer().resolve_multi(klass)

@@ -10,6 +10,9 @@ from .service_container import (
     ServiceContainer,
     ServiceNotRegistered,
     ServiceRegistration,
+    ServiceRequiresOtherServiceWithIdenticalProtocol,
+    multi_register_as,
     register_as,
     resolve,
+    resolve_multi,
 )
