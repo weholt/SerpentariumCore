@@ -260,10 +260,25 @@ def test_wrapper():
 
 
 def test_duplicate_registration():
+    ServiceContainer().clear()
     ServiceContainer().setconfig({"raise_exception_on_double_registrations": True})
     ServiceContainer().register(TheTalkingProtocol, Teacher())
     with pytest.raises(ServiceAlreadyRegistered):
         ServiceContainer().register(TheTalkingProtocol, Teacher())
+
+
+def test_setconfig_invalid_settings():
+    ServiceContainer().clear()
+    with ServiceContainer() as sc:
+        sc.setconfig({"instance": True})
+        sc.register(TheTalkingProtocol, Teacher())
+
+
+def test_setconfig_valid_settings_v2():
+    ServiceContainer().clear()
+    ServiceContainer().setconfig({"default_namespace": "demo"})
+    ServiceContainer().register(TheTalkingProtocol, Teacher())
+    ServiceContainer().setconfig({"default_namespace": "default"})
 
 
 def test_replace_registration():

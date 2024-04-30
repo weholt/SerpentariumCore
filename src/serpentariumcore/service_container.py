@@ -6,7 +6,7 @@ from typing import Any, Callable, Iterable, Protocol, Self, Tuple, Type
 logger = logging.getLogger("serpentariumcore")
 
 
-def implements_protocol(cls, protocol):
+def implements_protocol(cls: Type, protocol: Type) -> bool:
     cls_attrs = [name for name, _ in getmembers(cls, predicate=isfunction)]
     protocol_attrs = [name for name, _ in getmembers(protocol, predicate=isfunction)]
     return all(attr in cls_attrs for attr in protocol_attrs if not attr.startswith("__"))
@@ -39,7 +39,7 @@ class MissingRequirements(Exception):
         self.missing_requirements = missing_requirements
 
     def __str__(self) -> str:
-        return f"Service {self.klass} requires the following services which are not avaible: {", ".join(self.missing_requirements)}"  # type: ignore # noqa: F401 # pragma: no cover
+        return f"Service {self.klass} requires the following services which are not avaible: {", ".join(self.missing_requirements)}"  # noqa: F401 # pragma: no cover
 
 
 class ServiceArgument:
@@ -81,9 +81,9 @@ class ServiceContainer:
 
     def setconfig(self, values: dict[str, Any]) -> None:
         for attr, value in values.items():
-            if "attr" in ["instance", "services", "multi_services"]:
+            if attr in ["instance", "services", "multi_services"]:
                 continue
-            if hasattr(self, f"_ServiceContainer__{attr}"):
+            if hasattr(self, f"_ServiceContainer__{attr}"):  # noqa: F401 # pragma: no cover
                 setattr(self, f"_ServiceContainer__{attr}", value)
 
     def __check_namespace(self, namespace: str | None = None) -> str:
@@ -94,21 +94,21 @@ class ServiceContainer:
             self.__services[ns] = {}
         return ns
 
-    def construct[T](self, klass: T, namespace: str | None = None, **kwargs) -> T:
-        if not inspect.isclass(klass):  # type: ignore # noqa: F401 # pragma: no cover
+    def construct(self, klass: Type, namespace: str | None = None, **kwargs: dict[Any, Any]) -> Type[Any]:
+        if not inspect.isclass(klass):  # noqa: F401 # pragma: no cover
             return klass
 
         ns = self.__check_namespace(namespace)
         klass_contstructor_args = inspect.getfullargspec(klass.__init__)
         reqs = {var_name: proto for var_name, proto in klass_contstructor_args.annotations.items()}
 
-        params = {}
+        params: dict[Any, Any] = {}
         params.update(kwargs)
         missing_requirements = []
         for k, v in reqs.items():
             if v in self.__services[ns]:
                 inst = self.__services[ns][v]
-                if inspect.isclass(inst):  # type: ignore # noqa: F401 # pragma: no cover
+                if inspect.isclass(inst):  # noqa: F401 # pragma: no cover
                     inst = self.construct(inst, ns)
                 params[k] = inst
             elif v:
@@ -117,7 +117,7 @@ class ServiceContainer:
         if missing_requirements:
             raise MissingRequirements(klass.__name__, missing_requirements)
 
-        return klass(**params)
+        return klass(**params)  # type: ignore
 
     def register(self, klass: Type, instance: Type, namespace: str | None = None) -> None:
         ns = self.__check_namespace(namespace)
@@ -145,18 +145,18 @@ class ServiceContainer:
         ns = self.__check_namespace(namespace)
         self.__services[ns][klass] = instance
 
-    def resolve[T](self, klass: Type[T], namespace: str | None = None) -> T | None:
+    def resolve(self, klass: Type, namespace: str | None = None) -> Type | None:
         ns = self.__check_namespace(namespace)
-        if klass in self.__services[ns]:  # type: ignore # noqa: F401 # pragma: no cover
+        if klass in self.__services[ns]:
             item = self.__services[ns][klass]
-            kwargs = {}
+            kwargs: dict[Any, Any] = {}
             if isinstance(item, ServiceArgument):
-                inner_klass, kwargs = item.unwrap()
+                inner_klass, kwargs = item.unwrap()  # type: ignore
                 item = inner_klass
             if self.lazy_construction and inspect.isclass(item):
                 item = self.construct(item, ns, **kwargs)
 
-            return item  # type: ignore # noqa: F401 # pragma: no cover
+            return item  # noqa: F401 # pragma: no cover
         return None
 
     def remove(self, klass: Type, namespace: str | None = None) -> None:
@@ -180,7 +180,7 @@ class ServiceContainer:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):  # type: ignore
-        if self.__previous_namespace:  # type: ignore # noqa: F401 # pragma: no cover
+        if self.__previous_namespace:  # noqa: F401 # pragma: no cover
             self.__current_namespace = self.__previous_namespace
         self.__previous_namespace = None
 
@@ -191,7 +191,7 @@ class ServiceContainer:
         self.__namespace_resolver = None
 
     @property
-    def lazy_construction(self):
+    def lazy_construction(self) -> bool:
         return self.__lazy_construction in [True, None]
 
     @property
@@ -208,7 +208,7 @@ class ServiceContainer:
 
 
 class ServiceRegistration:
-    def __init__(self, klass, namespace: str | None = None):
+    def __init__(self, klass: Type, namespace: str | None = None):
         self.klass = klass
         self.namespace = namespace
         self.args: Tuple = ()
@@ -216,20 +216,20 @@ class ServiceRegistration:
         self.service_arguments: ServiceArgument | None = None
 
     def with_arguments(self, service_arguments: Type[ServiceArgument]) -> Self:
-        self.service_arguments = service_arguments
+        self.service_arguments = service_arguments  # type: ignore
         return self
 
-    def __call__[T](self, instance: T) -> T:
+    def __call__(self, instance: Type) -> Type:
         if self.service_arguments is not None:
             self.service_arguments.for_service(instance)
-            ServiceContainer().register(self.klass, self.service_arguments, namespace=self.namespace)
+            ServiceContainer().register(self.klass, self.service_arguments, namespace=self.namespace)  # type: ignore
         else:
             ServiceContainer().register(self.klass, instance, namespace=self.namespace)
             logger.info(f"Service container registered {self.klass} -> {instance}")
         return instance
 
 
-def resolve[T](klass: Type[T], namespace: str | None = None) -> T | None:
+def resolve(klass: Type, namespace: str | None = None) -> Type | None:
     "Shortcut for ServiceContainer().resolve(...)"
     return ServiceContainer().resolve(klass, namespace)
 
@@ -252,5 +252,5 @@ def multi_register_as(klass: Type) -> Callable[[Type], Type]:
     return decorator
 
 
-def resolve_multi[T](klass: Type[T]) -> Iterable[Type]:
+def resolve_multi(klass: Type) -> Iterable[Type]:
     return ServiceContainer().resolve_multi(klass)
