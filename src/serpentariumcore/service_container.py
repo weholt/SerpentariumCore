@@ -64,6 +64,7 @@ class ServiceContainer:
     __current_namespace: str = __default_namespace
     __previous_namespace: str | None = None
     __namespace_resolver: Callable[[], str] | None = None
+    __raise_exception_on_double_registrations: bool = False
 
     def __new__(cls, namespace: str | None = None, lazy_construction: bool | None = None):  # type: ignore # noqa: F401 # pragma: no cover
         if cls.__instance is None:
@@ -77,6 +78,13 @@ class ServiceContainer:
 
         if self.__lazy_construction is None and lazy_construction is not None:
             self.__lazy_construction = lazy_construction
+
+    def setconfig(self, values: dict[str, Any]) -> None:
+        for attr, value in values.items():
+            if "attr" in ["instance", "services", "multi_services"]:
+                continue
+            if hasattr(self, f"_ServiceContainer__{attr}"):
+                setattr(self, f"_ServiceContainer__{attr}", value)
 
     def __check_namespace(self, namespace: str | None = None) -> str:
         if not namespace and self.__namespace_resolver:
@@ -116,7 +124,7 @@ class ServiceContainer:
         if not self.lazy_construction and inspect.isclass(instance):
             instance = self.construct(instance, ns)
 
-        if klass in self.__services[ns]:
+        if self.__raise_exception_on_double_registrations and klass in self.__services[ns]:
             raise ServiceAlreadyRegistered(f"Service {klass} is already registered.")
         self.__services[ns][klass] = instance
 
@@ -244,5 +252,5 @@ def multi_register_as(klass: Type) -> Callable[[Type], Type]:
     return decorator
 
 
-def resolve_multi[T](klass: Type[T]) -> Iterable[T]:
+def resolve_multi[T](klass: Type[T]) -> Iterable[Type]:
     return ServiceContainer().resolve_multi(klass)

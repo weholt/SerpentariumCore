@@ -260,6 +260,7 @@ def test_wrapper():
 
 
 def test_duplicate_registration():
+    ServiceContainer().setconfig({"raise_exception_on_double_registrations": True})
     ServiceContainer().register(TheTalkingProtocol, Teacher())
     with pytest.raises(ServiceAlreadyRegistered):
         ServiceContainer().register(TheTalkingProtocol, Teacher())
