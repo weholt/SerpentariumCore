@@ -16,6 +16,8 @@ Thanks ChatGPT for that name ;-)
 
 ## Status:
 
+![Tests](https://github.com/weholt/SerpentariumCore/actions/workflows/tests.yml/badge.svg)
+
 * Version: 0.4.1
 * Status: In development / Alpha / Proof-of-consept
 
