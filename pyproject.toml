@@ -7,7 +7,7 @@ name = "serpentariumcore"
 dynamic = ["version"]
 description = 'A service container for Python 3.12.x'
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 license = "GPL-3.0"
 keywords = []
 authors = [
@@ -135,6 +135,7 @@ legacy_tox_ini = """
     min_version = 4.14
     env_list =
         py312
+        py311
         type
         lint
         docs-deploy
@@ -177,7 +178,7 @@ legacy_tox_ini = """
 """
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.11"
 mypy_path = "src"
 strict = true
 # Unreachable blocks have been an issue when compiling mypyc, let's try to avoid 'em in the first place.
