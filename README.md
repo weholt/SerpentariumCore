@@ -18,7 +18,7 @@ Thanks ChatGPT for that name ;-)
 
 ![Tests](https://github.com/weholt/SerpentariumCore/actions/workflows/tests.yml/badge.svg)
 
-* Version: 0.4.1
+* Version: 0.4.2
 * Status: In development / Alpha / Proof-of-consept
 
 ## License:
@@ -114,6 +114,10 @@ if speaker := resolve(IA):
 - [Issues are reported here ](https://github.com/weholt/SerpentariumCore/issues)
 
 ## Release notes
+
+### Version 0.4.2
+
+- ServiceDiscovery added for semi-automatic discovery of service registrations.
 
 ### Version 0.4.1
 

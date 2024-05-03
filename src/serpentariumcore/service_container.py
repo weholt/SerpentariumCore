@@ -1,6 +1,11 @@
+import importlib.util
 import inspect
 import logging
+import os
+import tempfile
+import time
 from inspect import getmembers, isfunction
+from pathlib import Path
 from typing import Any, Callable, Iterable, Protocol, Self, Tuple, Type
 
 logger = logging.getLogger("serpentariumcore")
@@ -254,3 +259,62 @@ def multi_register_as(klass: Type) -> Callable[[Type], Type]:
 
 def resolve_multi(klass: Type) -> Iterable[Type]:
     return ServiceContainer().resolve_multi(klass)
+
+
+def import_module_from_file(file_path: Path) -> Any:
+    # Get the module name from the file name
+    module_name = file_path.stem
+
+    # Load the module from the file
+    spec = importlib.util.spec_from_file_location(module_name, file_path)
+    module = importlib.util.module_from_spec(spec)  # type: ignore
+    spec.loader.exec_module(module)  # type: ignore
+
+    return module
+
+
+class ServiceDiscovery:
+    __instance = None
+    __verbose: bool = True
+    __PID_FILE = "sd5435435345.pid"
+
+    def __new__(cls, verbose: bool = True) -> Self:  # type: ignore # noqa: F401 # pragma: no cover
+        if cls.__instance is None:
+            cls.__instance = super(ServiceDiscovery, cls).__new__(cls)
+        return cls.__instance
+
+    def __init__(self, verbose: bool = True) -> None:
+        self.__verbose = verbose
+
+    def log(self, msg: str) -> None:
+        if self.__verbose:
+            print(msg)
+        else:
+            logger.info(msg)
+
+    def discover(self, module: Any, verbose: bool = True) -> None:
+        temp_dir = tempfile.gettempdir()
+        pid = os.path.join(temp_dir, self.__PID_FILE)
+        if os.path.exists(pid):
+            return
+
+        with open(pid, "w") as f:
+            f.write("0")
+
+        start = time.time()
+        self.log("Starting service discovery ...")
+        for unit in Path(module.__file__).parent.glob("**/*.py"):
+            if unit.name.startswith("test_") or unit.name.startswith("__"):
+                continue
+            try:
+                import_module_from_file(unit)
+            except Exception as ex:
+                pass
+        os.remove(pid)
+        self.log(f"Finished discovery in {time.time()-start} seconds.")
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):  # type: ignore
+        pass

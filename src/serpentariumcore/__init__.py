@@ -8,6 +8,7 @@ from .service_container import (
     ServiceAlreadyRegistered,
     ServiceArgument,
     ServiceContainer,
+    ServiceDiscovery,
     ServiceNotRegistered,
     ServiceRegistration,
     ServiceRequiresOtherServiceWithIdenticalProtocol,
