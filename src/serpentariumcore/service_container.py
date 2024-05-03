@@ -277,6 +277,7 @@ class ServiceDiscovery:
     __instance = None
     __verbose: bool = True
     __PID_FILE = "sd5435435345.pid"
+    __discovered = []
 
     def __new__(cls, verbose: bool = True) -> Self:  # type: ignore # noqa: F401 # pragma: no cover
         if cls.__instance is None:
@@ -292,7 +293,11 @@ class ServiceDiscovery:
         else:
             logger.info(msg)
 
-    def discover(self, module: Any, verbose: bool = True) -> None:
+    def discover(self, module: Any) -> None:
+        if module in self.__discovered:
+            return
+
+        self.__discovered.append(module)
         temp_dir = tempfile.gettempdir()
         pid = os.path.join(temp_dir, self.__PID_FILE)
         if os.path.exists(pid):
