@@ -84,3 +84,27 @@ def test_multi_service_registration_crashes_if_one_multi_service_requires_anothe
 
             def generate(self):
                 pass
+
+
+def test_multi_service_over_and_over_does_not_give_duplicates():
+    ServiceContainer().clear()
+
+    class IB(Protocol):
+        def generate(self) -> int:
+            ...
+
+    @multi_register_as(IB)
+    class C:
+        def generate(self):
+            return 1
+
+    @multi_register_as(IB)
+    class A:
+        def generate(self):
+            return 2
+
+    @multi_register_as(IB)
+    @multi_register_as(IB)
+    class D:
+        def generate(self):
+            return 42

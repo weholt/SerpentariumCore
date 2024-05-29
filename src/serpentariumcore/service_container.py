@@ -135,6 +135,10 @@ class ServiceContainer:
 
     def multi_register(self, klass: Type, instance: Type) -> None:
         assert implements_protocol(instance, klass)
+        if klass in self.__multi_services:
+            if instance in self.__multi_services[klass]:
+                return
+
         self.__multi_services.setdefault(klass, []).append(instance)
 
         klass_contstructor_args = inspect.getfullargspec(instance.__init__)
@@ -286,6 +290,8 @@ class ServiceDiscovery:
 
     def __init__(self, verbose: bool = True) -> None:
         self.__verbose = verbose
+        if not self.__discovered and os.path.exists(self.get_pid_file()):
+            os.remove(self.get_pid_file())
 
     def log(self, msg: str) -> None:
         if self.__verbose:
@@ -293,19 +299,19 @@ class ServiceDiscovery:
         else:
             logger.info(msg)
 
-    def discover(self, module: Any) -> None:
-        if module in self.__discovered:
-            return
-
-        self.__discovered.append(module)
+    def get_pid_file(self) -> str:
         temp_dir = tempfile.gettempdir()
-        pid = os.path.join(temp_dir, self.__PID_FILE)
-        if os.path.exists(pid):
+        return os.path.join(temp_dir, self.__PID_FILE)
+
+    def discover(self, module: Any) -> None:
+        pid = self.get_pid_file()
+        if os.path.exists(pid) or module in self.__discovered:
             return
 
         with open(pid, "w") as f:
             f.write("0")
 
+        self.__discovered.append(module)
         start = time.time()
         self.log("Starting service discovery ...")
         for unit in Path(module.__file__).parent.glob("**/*.py"):
@@ -314,8 +320,11 @@ class ServiceDiscovery:
             try:
                 import_module_from_file(unit)
             except Exception as ex:
-                pass
-        os.remove(pid)
+                self.log(f"Error importing {unit}: {ex}")
+
+        if os.path.exists(pid):
+            os.remove(pid)
+
         self.log(f"Finished discovery in {time.time()-start} seconds.")
 
     def __enter__(self) -> Self:
