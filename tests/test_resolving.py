@@ -1,23 +1,19 @@
 from typing import Protocol
 
 import pytest
-
 from serpentariumcore import MissingRequirements, ServiceContainer
 
 
 class IA(Protocol):
-    def go_a(self):
-        ...
+    def go_a(self): ...
 
 
 class IB(Protocol):
-    def go_b(self):
-        ...
+    def go_b(self): ...
 
 
 class IC(Protocol):
-    def go_c(self):
-        ...
+    def go_c(self): ...
 
 
 class A:

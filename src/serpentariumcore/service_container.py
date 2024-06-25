@@ -14,7 +14,9 @@ logger = logging.getLogger("serpentariumcore")
 def implements_protocol(cls: Type, protocol: Type) -> bool:
     cls_attrs = [name for name, _ in getmembers(cls, predicate=isfunction)]
     protocol_attrs = [name for name, _ in getmembers(protocol, predicate=isfunction)]
-    return all(attr in cls_attrs for attr in protocol_attrs if not attr.startswith("__"))
+    return all(
+        attr in cls_attrs for attr in protocol_attrs if not attr.startswith("__")
+    )
 
 
 class ServiceAlreadyRegistered(Exception):
@@ -38,7 +40,9 @@ class ServiceRequiresOtherServiceWithIdenticalProtocol(Exception):
 
 
 class MissingRequirements(Exception):
-    def __init__(self, klass: str, missing_requirements: list[str], *args: Type) -> None:
+    def __init__(
+        self, klass: str, missing_requirements: list[str], *args: Type
+    ) -> None:
         super().__init__(*args)
         self.klass = klass
         self.missing_requirements = missing_requirements
@@ -76,7 +80,9 @@ class ServiceContainer:
             cls.__instance = super(ServiceContainer, cls).__new__(cls)
         return cls.__instance
 
-    def __init__(self, namespace: str | None = None, lazy_construction: bool | None = None) -> None:
+    def __init__(
+        self, namespace: str | None = None, lazy_construction: bool | None = None
+    ) -> None:
         if namespace:
             ns = self.__check_namespace(namespace)
             self.set_namespace(ns)
@@ -88,7 +94,9 @@ class ServiceContainer:
         for attr, value in values.items():
             if attr in ["instance", "services", "multi_services"]:
                 continue
-            if hasattr(self, f"_ServiceContainer__{attr}"):  # noqa: F401 # pragma: no cover
+            if hasattr(
+                self, f"_ServiceContainer__{attr}"
+            ):  # noqa: F401 # pragma: no cover
                 setattr(self, f"_ServiceContainer__{attr}", value)
 
     def __check_namespace(self, namespace: str | None = None) -> str:
@@ -99,13 +107,18 @@ class ServiceContainer:
             self.__services[ns] = {}
         return ns
 
-    def construct(self, klass: Type, namespace: str | None = None, **kwargs: dict[Any, Any]) -> Type[Any]:
+    def construct(
+        self, klass: Type, namespace: str | None = None, **kwargs: dict[Any, Any]
+    ) -> Type[Any]:
         if not inspect.isclass(klass):  # noqa: F401 # pragma: no cover
             return klass
 
         ns = self.__check_namespace(namespace)
         klass_contstructor_args = inspect.getfullargspec(klass.__init__)
-        reqs = {var_name: proto for var_name, proto in klass_contstructor_args.annotations.items()}
+        reqs = {
+            var_name: proto
+            for var_name, proto in klass_contstructor_args.annotations.items()
+        }
 
         params: dict[Any, Any] = {}
         params.update(kwargs)
@@ -124,12 +137,17 @@ class ServiceContainer:
 
         return klass(**params)  # type: ignore
 
-    def register(self, klass: Type, instance: Type, namespace: str | None = None) -> None:
+    def register(
+        self, klass: Type, instance: Type, namespace: str | None = None
+    ) -> None:
         ns = self.__check_namespace(namespace)
         if not self.lazy_construction and inspect.isclass(instance):
             instance = self.construct(instance, ns)
 
-        if self.__raise_exception_on_double_registrations and klass in self.__services[ns]:
+        if (
+            self.__raise_exception_on_double_registrations
+            and klass in self.__services[ns]
+        ):
             raise ServiceAlreadyRegistered(f"Service {klass} is already registered.")
         self.__services[ns][klass] = instance
 
@@ -150,7 +168,9 @@ class ServiceContainer:
         for service in self.__multi_services.get(klass, []):
             yield self.construct(service)
 
-    def replace(self, klass: Type, instance: Type, namespace: str | None = None) -> None:
+    def replace(
+        self, klass: Type, instance: Type, namespace: str | None = None
+    ) -> None:
         ns = self.__check_namespace(namespace)
         self.__services[ns][klass] = instance
 

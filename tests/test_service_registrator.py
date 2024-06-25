@@ -1,24 +1,25 @@
 from typing import Protocol
 
 import pytest
-
-from serpentariumcore import ConstructionFailed, MissingRequirements, ServiceContainer, ServiceRegistration
+from serpentariumcore import (
+    ConstructionFailed,
+    MissingRequirements,
+    ServiceContainer,
+    ServiceRegistration,
+)
 
 
 def _test_service_registration_lazy_construction():
     ServiceContainer().clear()
 
     class IA(Protocol):
-        def go_a(self):
-            ...
+        def go_a(self): ...
 
     class IB(Protocol):
-        def go_b(self):
-            ...
+        def go_b(self): ...
 
     class IC(Protocol):
-        def go_c(self):
-            ...
+        def go_c(self): ...
 
     # Without lazy construction registration of IC would cause an Exception because
     # it requires services IA & IB which hasn't been registered yet.
@@ -58,16 +59,13 @@ def test_service_registration_without_lazy_construction_crashes():
     ServiceContainer(lazy_construction=False)
 
     class IA(Protocol):
-        def go_a(self):
-            ...
+        def go_a(self): ...
 
     class IB(Protocol):
-        def go_b(self):
-            ...
+        def go_b(self): ...
 
     class IC(Protocol):
-        def go_c(self):
-            ...
+        def go_c(self): ...
 
     # Without lazy construction registration of IC would cause an Exception because
     # it requires services IA & IB which hasn't been registered yet.

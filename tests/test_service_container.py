@@ -1,13 +1,18 @@
 from typing import Callable, Protocol, Tuple
 
 import pytest
-
-from serpentariumcore import ServiceAlreadyRegistered, ServiceArgument, ServiceContainer, ServiceRegistration, register_as, resolve
+from serpentariumcore import (
+    ServiceAlreadyRegistered,
+    ServiceArgument,
+    ServiceContainer,
+    ServiceRegistration,
+    register_as,
+    resolve,
+)
 
 
 class TheTalkingProtocol(Protocol):
-    def speak(self, sentence) -> str:
-        ...
+    def speak(self, sentence) -> str: ...
 
 
 class Speaker:
@@ -38,7 +43,10 @@ def test_teacher_using_both_shortcuts():
             return f"The headmaster whispers '{sentence}'."
 
     if person := resolve(TheTalkingProtocol):
-        assert person.speak(sentence="The dog sits on a mat") == "The headmaster whispers 'The dog sits on a mat'."
+        assert (
+            person.speak(sentence="The dog sits on a mat")
+            == "The headmaster whispers 'The dog sits on a mat'."
+        )
 
 
 def test_teacher_using_shortcut():
@@ -46,7 +54,10 @@ def test_teacher_using_shortcut():
     ServiceContainer().register(TheTalkingProtocol, Teacher())
 
     if person := resolve(TheTalkingProtocol):
-        assert person.speak(sentence="The dog sits on a mat") == "The teacher screams 'The dog sits on a mat'."
+        assert (
+            person.speak(sentence="The dog sits on a mat")
+            == "The teacher screams 'The dog sits on a mat'."
+        )
 
 
 def test_teacher():
@@ -54,7 +65,10 @@ def test_teacher():
     ServiceContainer().register(TheTalkingProtocol, Teacher())
 
     if person := ServiceContainer().resolve(TheTalkingProtocol):
-        assert person.speak(sentence="The dog sits on a mat") == "The teacher screams 'The dog sits on a mat'."
+        assert (
+            person.speak(sentence="The dog sits on a mat")
+            == "The teacher screams 'The dog sits on a mat'."
+        )
 
 
 def test_speaker():
@@ -62,7 +76,10 @@ def test_speaker():
     ServiceContainer().register(TheTalkingProtocol, Speaker())
 
     if person := ServiceContainer().resolve(TheTalkingProtocol):
-        assert person.speak(sentence="The dog sits on a mat") == "The speaker says 'The dog sits on a mat'."
+        assert (
+            person.speak(sentence="The dog sits on a mat")
+            == "The speaker says 'The dog sits on a mat'."
+        )
 
 
 def test_namespace():
@@ -83,16 +100,26 @@ def test_resolving_namespaces():
     s.register(TheTalkingProtocol, Teacher())
     s.register(TheTalkingProtocol, Speaker(), namespace="test")
     if person := ServiceContainer().resolve(TheTalkingProtocol):
-        assert person.speak(sentence="The dog sits on a mat") == "The teacher screams 'The dog sits on a mat'."
+        assert (
+            person.speak(sentence="The dog sits on a mat")
+            == "The teacher screams 'The dog sits on a mat'."
+        )
     with ServiceContainer("test") as s2:
         if person := ServiceContainer().resolve(TheTalkingProtocol):
-            assert person.speak(sentence="The dog sits on a mat") == "The speaker says 'The dog sits on a mat'."
+            assert (
+                person.speak(sentence="The dog sits on a mat")
+                == "The speaker says 'The dog sits on a mat'."
+            )
 
 
 def test_registration_with_kwargs():
     ServiceContainer().clear()
 
-    @ServiceRegistration(TheTalkingProtocol).with_arguments(ServiceArgument(**{"joke": "A barber, a developer and a mechanic walks into a bar"}))
+    @ServiceRegistration(TheTalkingProtocol).with_arguments(
+        ServiceArgument(
+            **{"joke": "A barber, a developer and a mechanic walks into a bar"}
+        )
+    )
     class Comedian:
         def __init__(self, *args, **kwargs):
             self.joke = kwargs.get("joke", "Two donkeys walk into a bar")
@@ -102,14 +129,19 @@ def test_registration_with_kwargs():
 
     if person := ServiceContainer().resolve(TheTalkingProtocol):
         assert (
-            person.speak(sentence="The dog sits on a mat") == "The comedian laughs and says 'A barber, a developer and a mechanic walks into a bar ... but The dog sits on a mat'."
+            person.speak(sentence="The dog sits on a mat")
+            == "The comedian laughs and says 'A barber, a developer and a mechanic walks into a bar ... but The dog sits on a mat'."
         )
 
 
 def test_registration_with_kwargs_and_namespace():
     ServiceContainer().clear()
 
-    @ServiceRegistration(TheTalkingProtocol, namespace="jokes").with_arguments(ServiceArgument(**{"joke": "A barber, a developer and a mechanic walks into a bar"}))
+    @ServiceRegistration(TheTalkingProtocol, namespace="jokes").with_arguments(
+        ServiceArgument(
+            **{"joke": "A barber, a developer and a mechanic walks into a bar"}
+        )
+    )
     class Comedian:
         def __init__(self, *args, **kwargs):
             self.joke = kwargs.get("joke", "Two donkeys walk into a bar")
@@ -119,7 +151,8 @@ def test_registration_with_kwargs_and_namespace():
 
     if person := ServiceContainer().resolve(TheTalkingProtocol, namespace="jokes"):
         assert (
-            person.speak(sentence="The dog sits on a mat") == "The comedian laughs and says 'A barber, a developer and a mechanic walks into a bar ... but The dog sits on a mat'."
+            person.speak(sentence="The dog sits on a mat")
+            == "The comedian laughs and says 'A barber, a developer and a mechanic walks into a bar ... but The dog sits on a mat'."
         )
 
 
@@ -127,8 +160,7 @@ def test_registration_with_same_instance_different_namespace():
     ServiceContainer().clear()
 
     class LoggingBase(Protocol):
-        def log(self, msg: str) -> None:
-            ...
+        def log(self, msg: str) -> None: ...
 
     @ServiceRegistration(LoggingBase)
     class LoggingCritical:
@@ -153,8 +185,7 @@ def test_registration_with_same_instance_custom_func():
     ServiceContainer().clear()
 
     class FancyLoggingBase(Protocol):
-        def log(self, msg: str, func: Callable[[str], str]) -> str:
-            ...
+        def log(self, msg: str, func: Callable[[str], str]) -> str: ...
 
     class LoggingTakingFunc:
         def __init__(self, func: Callable[[str], str]) -> None:
@@ -170,7 +201,9 @@ def test_registration_with_same_instance_custom_func():
         return f"DEBUG: {msg}"
 
     ServiceContainer().register(FancyLoggingBase, LoggingTakingFunc(func=log_critical))
-    ServiceContainer().register(FancyLoggingBase, LoggingTakingFunc(func=log_debug), namespace="debug")
+    ServiceContainer().register(
+        FancyLoggingBase, LoggingTakingFunc(func=log_debug), namespace="debug"
+    )
 
     if critical_logger := ServiceContainer().resolve(FancyLoggingBase):
         assert "CRITICAL" in critical_logger.log(msg="Should be critical")
@@ -186,11 +219,15 @@ def test_registration_with_same_instance_custom_func():
         DEBUG = False
 
     settings = test_settings()
-    if clueless_logger := ServiceContainer().resolve(FancyLoggingBase, namespace=settings.DEBUG and "debug"):
+    if clueless_logger := ServiceContainer().resolve(
+        FancyLoggingBase, namespace=settings.DEBUG and "debug"
+    ):
         assert "DEBUG" in clueless_logger.log(msg="Should be debug")
 
     settings = prod_settings()
-    if clueless_logger := ServiceContainer().resolve(FancyLoggingBase, namespace=settings.DEBUG and "debug" or None):
+    if clueless_logger := ServiceContainer().resolve(
+        FancyLoggingBase, namespace=settings.DEBUG and "debug" or None
+    ):
         assert "CRITICAL" in clueless_logger.log(msg="Should be critical")
 
 
@@ -198,8 +235,7 @@ def test_namespace_resolver():
     ServiceContainer().clear()
 
     class FancyLoggingBase(Protocol):
-        def log(self, msg: str, func: Callable[[str], str]) -> str:
-            ...
+        def log(self, msg: str, func: Callable[[str], str]) -> str: ...
 
     class LoggingTakingFunc:
         def __init__(self, func: Callable[[str], str]) -> None:
@@ -215,7 +251,9 @@ def test_namespace_resolver():
         return f"DEBUG: {msg}"
 
     ServiceContainer().register(FancyLoggingBase, LoggingTakingFunc(func=log_critical))
-    ServiceContainer().register(FancyLoggingBase, LoggingTakingFunc(func=log_debug), namespace="debug")
+    ServiceContainer().register(
+        FancyLoggingBase, LoggingTakingFunc(func=log_debug), namespace="debug"
+    )
 
     # Simulate Django settings for test and prod
     class Settings:
@@ -239,15 +277,16 @@ def test_wrapper():
     ServiceContainer().clear()
 
     class FancyLoggingBase(Protocol):
-        def log(self, msg: str, func: Callable[[str], str]) -> str:
-            ...
+        def log(self, msg: str, func: Callable[[str], str]) -> str: ...
 
     class ExtraArguments(ServiceArgument):
         def unwrap(self):
             self.kwargs.update({"name": "Thomas"})
             return super().unwrap()
 
-    @ServiceRegistration(FancyLoggingBase).with_arguments(ExtraArguments(**{"saying": "Poof goes the dragon!"}))
+    @ServiceRegistration(FancyLoggingBase).with_arguments(
+        ExtraArguments(**{"saying": "Poof goes the dragon!"})
+    )
     class Logging:
         def __init__(self, **kwargs) -> None:
             self.kwargs = kwargs
@@ -256,7 +295,10 @@ def test_wrapper():
             return f"{msg} + {self.kwargs}"
 
     if logger := ServiceContainer().resolve(FancyLoggingBase):
-        assert logger.log("Hello Ma!") == "Hello Ma! + {'saying': 'Poof goes the dragon!', 'name': 'Thomas'}"
+        assert (
+            logger.log("Hello Ma!")
+            == "Hello Ma! + {'saying': 'Poof goes the dragon!', 'name': 'Thomas'}"
+        )
 
 
 def test_duplicate_registration():
@@ -338,8 +380,7 @@ def test_wrapper_service_base():
     ServiceContainer().clear()
 
     class IA(Protocol):
-        def speak(self):
-            ...
+        def speak(self): ...
 
     class A:
         def __init__(self, **kwargs):
@@ -348,7 +389,9 @@ def test_wrapper_service_base():
         def speak(self):
             return f"Here are kwargs: {self.kwargs}"
 
-    ServiceContainer().register(IA, ServiceArgument(some="foobar", variable="something").for_service(A))
+    ServiceContainer().register(
+        IA, ServiceArgument(some="foobar", variable="something").for_service(A)
+    )
     if res := ServiceContainer().resolve(IA):
         assert res.speak() != None
 
@@ -357,16 +400,14 @@ def test_wrapper_service_base_with_dependencies():
     ServiceContainer().clear()
 
     class IB(Protocol):
-        def howl(self):
-            ...
+        def howl(self): ...
 
     class B:
         def howl(self) -> str:
             return "YAHOOO!"
 
     class IA(Protocol):
-        def speak(self) -> str:
-            ...
+        def speak(self) -> str: ...
 
     class A:
         def __init__(self, b: IB, **kwargs):
@@ -377,7 +418,9 @@ def test_wrapper_service_base_with_dependencies():
             return f"Here are kwargs: {self.kwargs} and a word from B: {self.b.howl()}"
 
     ServiceContainer().register(IB, B)
-    ServiceContainer().register(IA, ServiceArgument(some="foobar", variable="something").for_service(A))
+    ServiceContainer().register(
+        IA, ServiceArgument(some="foobar", variable="something").for_service(A)
+    )
     if res := ServiceContainer().resolve(IA):
         spoken: str = res.speak()
         # Here we test to see if both the foobar supplied as extra argument
